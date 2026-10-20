@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-20
+
 ### Added
 
 - One device per Backrest plan: state (OK, with warnings, failed, overdue,
@@ -28,3 +30,6 @@ the notes of the version's GitHub Release.
   others.
 - Backrest with or without authentication; texts in English, French, German
   and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-backrest/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-backrest/releases/tag/v1.0.0
