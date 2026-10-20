@@ -31,16 +31,22 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only (src/app.js), shutdown
+src/app.js                        every SDK handler registered on the hub (the tests use it too)
+src/hub.js                        reading timer, plan views, repository histories, states, scene events, transports, status
+src/backrest/client.js            Backrest Connect API: GetConfig, GetOperations, Backup; Basic auth; parsing
+src/cron.js                       longest gap of a cron schedule (automatic "overdue" threshold)
+src/devices.js                    device blueprints (plan, repository, instance), feature names (4 languages), states, overdue rule
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/widgets.js                    dashboard widget (manifest `widgets`)
+src/texts.js                      every text sent to Gladys outside the widget, 4 languages
+src/store.js                      /data/backrest-state.json: last backup seen per plan, last success, overdue or not
+src/problems.js                   one log line when a repeated failure starts, one when it ends
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (mandatory, same sections)
+test/                             node --test, against the SDK's fake Gladys and test/helpers/fakeBackrest.js
+test/fixtures/backrest/           real answers of Backrest 1.14.1 (Docker), anonymized
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +76,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** is in four languages (English, French, German,
+  Spanish): action messages, manifest texts, feature names, widget, and
+  `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +240,38 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Backrest (propre à ce dépôt)
+
+Vérifié sur un vrai **Backrest 1.14.1** (image `garethgeorge/backrest`, le 20/10/2026, dépôt restic local,
+quatre plans : réussi, dossier manquant, fichier illisible `/proc/1/mem`, gros fichier pour l'état « en cours ») :
+
+- **API Connect** (`POST /v1.Backrest/<Méthode>`, JSON) : noms dans `proto/v1/service.proto` du dépôt
+  Backrest. Les int64 arrivent **en chaînes** ; une liste vide est `{}` (pas de clé `operations`). Erreur :
+  `{ code, message }` (404 `not_found` pour un plan inconnu, 500 `unknown` avec le message de restic).
+- **Authentification** : Basic sur chaque requête quand Backrest a des utilisateurs (le middleware l'accepte à
+  côté de son JWT ; bcrypt à chaque requête, négligeable à 5 min). Sans utilisateur (`auth.disabled`), aucun
+  identifiant : les deux champs sont facultatifs. Mauvais identifiants ou absents : 401 texte
+  « Unauthorized (No Authorization Header) ».
+- **`GetConfig` rend les mots de passe et URI des dépôts restic en clair** : `normalizeConfig` ne garde
+  qu'identifiants, chemins et planification ; un test vérifie qu'aucun ne fuit (Gladys, journaux).
+- `GetOperations { selector: { planId, instanceId }, lastN }` : les N **dernières** opérations, rendues
+  **de la plus ancienne à la plus récente** (tri par id). Une sauvegarde : `operationBackup` avec
+  `status` `STATUS_PENDING` (la prochaine, `unixTimeStartMs` dans le futur), `INPROGRESS`
+  (`lastStatus.status.percentDone` 0–1), `SUCCESS`, `WARNING` (fichiers illisibles : `errors[]`,
+  `displayMessage` « Partial backup… », un instantané est créé), `ERROR` (`displayMessage`, pas
+  d'instantané), `*_CANCELLED` (ignorés). `dryRun` ignoré. Les opérations « pending » sont recréées (nouvel
+  id) à chaque changement de configuration.
+- **Taille d'un dépôt** : seulement dans une opération `operationStats` (plan `_system_`), que Backrest lance
+  après un prune/forget, une fois par jour au plus (ou « Stats » à la main). **Instantanés** : opérations
+  `operationIndexSnapshot` non `forgot`. Lus dans l'historique complet du dépôt (`selector.repoGuid`), une
+  fois par heure ou quand une opération de l'un de ses plans se termine ; Backrest purge ses opérations après
+  ~30 jours (100 par type), d'où la dernière réussite gardée dans `/data`.
+- **`Backup { value: planId }` ne répond qu'à la fin de la sauvegarde** (`scheduleTaskAndWait`) : l'action
+  attend 3 s ; une erreur avant (dossier manquant, plan supprimé) est l'erreur de l'action, après, la
+  sauvegarde tourne et les déclencheurs disent la fin. Annuler la requête n'annule pas la sauvegarde ; undici
+  coupe la requête après 300 s (`headersTimeout`), sans conséquence (journal debug).
+- Planification : `maxFrequencyHours`/`maxFrequencyDays`, ou `cron` (5 champs) : le retard automatique prend
+  le plus long écart du cron sur deux mois (`src/cron.js`) + max(1 h, période/4), la marge de Backrest
+  (`overdueGraceFactor` 1,25).
+- Écoute par défaut sur `127.0.0.1:9898` hors Docker ; l'image Docker met `BACKREST_PORT=0.0.0.0:9898`.

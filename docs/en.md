@@ -1,61 +1,177 @@
-# Demo Devices Template
+# Backrest
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+[Backrest](https://github.com/garethgeorge/backrest) is a web interface and
+scheduler for [restic](https://restic.net/) backups. This integration brings
+the plans and repositories of a Backrest instance into Gladys: each plan
+becomes a device with its state, its last successful backup, the data it added
+and the errors of its last backup; each repository shows its size and its
+snapshots. Scenes can react when **any** backup succeeds, fails or is overdue
+(no success for too long), a dashboard widget lists the failed plans first,
+and a scene can start a backup.
 
-## What you get
+Tested against a real Backrest 1.14 (Docker image `garethgeorge/backrest`, a
+local restic repository): a backup that succeeds, one whose folder is missing,
+one with an unreadable file, a backup started from the integration, with and
+without authentication. Not yet tested on a real Gladys: feedback welcome on
+[the issues](https://github.com/guim31/gladys-backrest/issues).
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+## What you need
 
-## Configuration
+- Gladys Assistant 5.1.0 or later.
+- Backrest 1.x (tested with 1.14.1), its web interface reachable from the
+  Gladys machine (port 9898 by default).
+- If its authentication is enabled: a username and its password (Backrest
+  **Settings → Users**). A dedicated user is better than yours.
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+The integration reads Backrest every 5 minutes by default (every 30 seconds
+while a backup runs): one light request per plan, plus the history of each
+repository once an hour. Nothing is sent outside your network.
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+## Getting started
 
-## Actions
+### 1. Check the address of Backrest
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+Open Backrest from a browser and note its address, for example
+`http://192.168.1.2:9898`. Backrest listens only to its own machine by default
+(`127.0.0.1:9898`): to reach it from Gladys, start it with
+`BACKREST_PORT=0.0.0.0:9898` (the Docker image already does).
 
-## Scenes
+### 2. Configure the integration
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+In Gladys, **Integrations → Backrest → Configuration**:
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+- **Backrest address**: the address noted above. A bare address
+  (`192.168.1.2`) uses port 9898; an address copied from the browser works
+  too.
+- **Username** and **Password**: a user of Backrest. Leave both empty if its
+  authentication is disabled.
+- **Refresh interval**: 1, 5 (default) or 15 minutes.
+- **Overdue after**: when a plan without success becomes overdue. _Automatic_
+  (default) follows the schedule of each plan: its period ("every 24 hours")
+  or the longest gap of its cron expression, plus a quarter of it (an hour at
+  least) — 30 hours for a daily plan, 90 hours for a plan run on weekdays only.
+  A plan without schedule is then never overdue. Or a fixed delay, from 12
+  hours to a week, for every plan.
+- **Allow starting backups**: lets the scene action "Start a backup" work.
+  Disable it if nobody should start a backup from Gladys.
+- **Language of the names**: language of the feature names, of the states and
+  of the scene results.
+
+**Test the connection** reads Backrest and sums up: the number of plans and
+repositories, failed and overdue.
+
+### 3. Add the plans
+
+In the **Discover** tab, add the plans and repositories to follow, and the
+"Backrest" device for the instance. Scene triggers work for every plan, added
+or not.
+
+## The devices
+
+Each plan:
+
+| Feature                       | Value                                                    |
+| ----------------------------- | -------------------------------------------------------- |
+| State                         | OK, With warnings, Failed, Overdue, Running or Never run |
+| Last successful backup        | day/month hours:minutes, "-" if none                     |
+| Hours since last success      | in hours                                                 |
+| Last backup duration          | in seconds                                               |
+| Data added by the last backup | new data sent to the repository, in MB                   |
+| Snapshots                     | snapshots of this plan kept in the repository            |
+| Errors of the last backup     | 1 when it failed, else 0                                 |
+| Warnings of the last backup   | number of files it could not read                        |
+| Running                       | 1 while this plan backs up                               |
+| Next scheduled backup         | day/month hours:minutes, "-" without schedule            |
+
+Each repository:
+
+- **Repository size**: in MB, from the last "stats" operation of Backrest
+  (after a prune, once a day at most; **Stats** in the repository page of
+  Backrest runs one);
+- **Snapshots**: the snapshots it holds.
+
+The "Backrest" device, for the instance:
+
+- **Backup running**: 1 or 0;
+- **Progress**: in %;
+- **Current plan**: its name, "-" if none;
+- **Failed plans** and **Overdue plans**: how many.
+
+A backup "succeeds" when restic makes a snapshot, with or without warnings
+(files it could not read). It "fails" when no snapshot is made (folder
+missing, repository unreachable or locked…). The state shows what needs
+attention first: a failed plan shows "Failed" even when it is also overdue.
+Dry runs are ignored.
 
 ## Dashboard
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+The **Backrest** widget shows the number of plans failed, overdue and OK, then
+one row per plan: failed first, then overdue, running, with warnings, never
+run, OK, with the last success (or the progress of the backup running). Every
+plan by default, or the ones chosen in its settings. The **Refresh** button
+reads Backrest again.
+
+## Scenes
+
+### Triggers
+
+- **A backup succeeds**: a backup ends with a snapshot, with or without
+  warnings. Information: plan, duration (minutes), warnings, data added,
+  snapshots.
+- **A backup fails**: a backup ends without snapshot. The **Result** filter
+  chooses errors, warnings, or both (empty). Information: plan, the error (or
+  the first file not read), errors, warnings.
+- **A plan is overdue**: a plan has not succeeded for longer than the "Overdue
+  after" delay. Once per delay exceeded, again after a new success.
+  Information: plan, hours since last success, last success.
+
+Each trigger can be limited to some plans (empty: any).
+
+### Actions
+
+- **State of a plan**: reads the state of a plan for the next actions: failed,
+  overdue, the state in words, the name, the last success, hours since last
+  success (-1 if none), and a ready-made sentence ("photos: Failed, last
+  success 18/10 02:05.").
+- **Start a backup**: runs a backup of the plan now (Backrest queues it behind
+  the task running). An error within the first seconds (a folder missing, a
+  plan deleted) is the error of the action; after that, the triggers tell how
+  it ended. Refused when "Allow starting backups" is disabled.
+
+### Scene ideas
+
+- **A backup fails** → send a message with the plan and its error, picked from
+  the information of the trigger.
+- **A plan is overdue** → notify with the plan and the hours since its last
+  success: the computer holding the photos has not been on for days.
+- Every Sunday at 10:00 → **State of a plan** → send the sentence; or back up
+  the documents when you leave home, with **Start a backup**.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **"Backrest does not answer"**: check the address and the port from the
+  Gladys machine, and that Backrest listens to the network
+  (`BACKREST_PORT=0.0.0.0:9898`).
+- **"username or password missing or refused by Backrest"**: its
+  authentication is enabled: type the username and the password of a Backrest
+  user.
+- **"no Backrest at this address"**: the address points at something else.
+- **"certificate refused"**: a self-signed certificate on a reverse proxy; use
+  the `http://` address on your network.
+- **Repository size empty**: Backrest has not computed it yet; run **Stats**
+  from the repository page of Backrest.
+- **A plan never becomes overdue**: in _Automatic_, a plan without schedule
+  cannot be overdue; choose a fixed delay. A plan that has never succeeded is
+  not overdue either: it shows Failed or Never run.
+- To see more, set the `LOG_LEVEL` variable of the integration to `debug`.
+
+## Limits
+
+- One Backrest instance per integration; the plans of the other instances
+  synced with it are not shown.
+- Backrest keeps its operations about 30 days: the last success older than
+  that is the one the integration remembers.
+- The integration does not restore, prune or edit anything: it watches the
+  plans, and starts a backup if allowed.
+- Not affiliated with Backrest nor restic. Report a problem or an idea on
+  [the issues](https://github.com/guim31/gladys-backrest/issues).

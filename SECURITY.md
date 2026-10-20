@@ -30,6 +30,23 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- the **username and password of a Backrest user** (optional: none when the
+  authentication of Backrest is disabled), stored by Gladys in the integration
+  configuration (never written to `/data`, never logged); they are only sent,
+  as HTTP Basic authentication, to the address configured, and redirects are
+  not followed so they never reach another host;
+- the **Backrest configuration** read through its API, which holds the
+  passwords and addresses of the restic repositories: only the plan and
+  repository ids, paths and schedules are kept, in memory; nothing else is
+  stored, logged or sent to Gladys;
+- `/data/backrest-state.json`: the last backup seen of each plan, its last
+  success and whether it was overdue (no secret);
+- network: HTTP(S) requests to the Backrest address, nothing else; no port is
+  opened. The integration can start a backup (when allowed in its
+  configuration), never delete, restore, prune or edit anything.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and Backrest and restic themselves.

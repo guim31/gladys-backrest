@@ -1,0 +1,45 @@
+{
+  "operations": [
+    {
+      "id": "12",
+      "modno": "22",
+      "flowId": "12",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "big",
+      "instanceId": "gladys-test",
+      "status": "STATUS_PENDING",
+      "unixTimeStartMs": "1792543790597",
+      "operationBackup": {}
+    },
+    {
+      "id": "16",
+      "modno": "42",
+      "flowId": "16",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "big",
+      "instanceId": "gladys-test",
+      "snapshotId": "b30417821d3eb65e77ed8ac89d2a3ce13be4f6ea3f6272afb136df8d2f41d4dc",
+      "status": "STATUS_SUCCESS",
+      "unixTimeStartMs": "1792522190740",
+      "unixTimeEndMs": "1792522209238",
+      "logref": "t-9d9f7d8f-5ad5-41f6-a782-5f5aa2a0dbf1",
+      "operationBackup": {
+        "lastStatus": {
+          "summary": {
+            "filesNew": "1",
+            "dirsNew": "2",
+            "dataBlobs": "403",
+            "treeBlobs": "3",
+            "dataAdded": "600028003",
+            "totalFilesProcessed": "1",
+            "totalBytesProcessed": "600000000",
+            "totalDuration": 17.687038889,
+            "snapshotId": "b30417821d3eb65e77ed8ac89d2a3ce13be4f6ea3f6272afb136df8d2f41d4dc"
+          }
+        }
+      }
+    }
+  ]
+}
