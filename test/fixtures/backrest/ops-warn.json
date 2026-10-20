@@ -1,0 +1,85 @@
+{
+  "operations": [
+    {
+      "id": "10",
+      "modno": "20",
+      "flowId": "10",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "warn",
+      "instanceId": "gladys-test",
+      "snapshotId": "d5291bf1478c66e4272a46ffdc7f1400321fbf9137727305634e9d343b0bbb64",
+      "status": "STATUS_WARNING",
+      "unixTimeStartMs": "1792522095938",
+      "unixTimeEndMs": "1792522097358",
+      "displayMessage": "Partial backup, some files may not have been read completely.",
+      "logref": "t-e2592cea-dcb2-4230-9451-b9512e839cd3",
+      "operationBackup": {
+        "lastStatus": {
+          "summary": {
+            "filesNew": "2",
+            "dirsNew": "4",
+            "treeBlobs": "3",
+            "dataAdded": "1049",
+            "totalFilesProcessed": "2",
+            "totalBytesProcessed": "300006",
+            "totalDuration": 0.687135566,
+            "snapshotId": "d5291bf1478c66e4272a46ffdc7f1400321fbf9137727305634e9d343b0bbb64"
+          }
+        },
+        "errors": [
+          {
+            "item": "/proc/1/mem",
+            "during": "archival",
+            "message": "open /proc/1/mem: permission denied"
+          }
+        ]
+      }
+    },
+    {
+      "id": "11",
+      "modno": "21",
+      "flowId": "10",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "warn",
+      "instanceId": "gladys-test",
+      "snapshotId": "d5291bf1478c66e4272a46ffdc7f1400321fbf9137727305634e9d343b0bbb64",
+      "status": "STATUS_SUCCESS",
+      "unixTimeStartMs": "1792522096646",
+      "unixTimeEndMs": "1792522097333",
+      "operationIndexSnapshot": {
+        "snapshot": {
+          "id": "d5291bf1478c66e4272a46ffdc7f1400321fbf9137727305634e9d343b0bbb64",
+          "unixTimeMs": "1792522096646",
+          "hostname": "backrest-test",
+          "username": "root",
+          "tree": "53fa918c5c6c5751c9f13c4b0e1157131bc91173a68b2487f427ba866c42eb3e",
+          "paths": ["/proc/1/mem", "/source/docs"],
+          "tags": ["plan:warn", "created-by:gladys-test"],
+          "summary": {
+            "filesNew": "2",
+            "dirsNew": "4",
+            "treeBlobs": "3",
+            "dataAdded": "1049",
+            "totalFilesProcessed": "2",
+            "totalBytesProcessed": "300006",
+            "totalDuration": 0.687
+          }
+        }
+      }
+    },
+    {
+      "id": "15",
+      "modno": "25",
+      "flowId": "15",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "warn",
+      "instanceId": "gladys-test",
+      "status": "STATUS_PENDING",
+      "unixTimeStartMs": "1792608590600",
+      "operationBackup": {}
+    }
+  ]
+}

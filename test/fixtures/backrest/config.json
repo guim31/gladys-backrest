@@ -1,0 +1,70 @@
+{
+  "modno": 4,
+  "version": 6,
+  "instance": "gladys-test",
+  "repos": [
+    {
+      "id": "local",
+      "uri": "/repos/local",
+      "guid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "password": "example-repo-password",
+      "prunePolicy": {
+        "schedule": {
+          "disabled": true
+        }
+      },
+      "checkPolicy": {
+        "schedule": {
+          "disabled": true
+        }
+      }
+    }
+  ],
+  "plans": [
+    {
+      "id": "big",
+      "repo": "local",
+      "paths": ["/source/big"],
+      "schedule": {
+        "maxFrequencyHours": 6
+      }
+    },
+    {
+      "id": "documents",
+      "repo": "local",
+      "paths": ["/source/docs"],
+      "schedule": {
+        "maxFrequencyHours": 24,
+        "clock": "CLOCK_LAST_RUN_TIME"
+      },
+      "retention": {
+        "policyKeepLastN": 5
+      }
+    },
+    {
+      "id": "secrets",
+      "repo": "local",
+      "paths": ["/source/missing"],
+      "schedule": {
+        "cron": "0 3 * * *",
+        "clock": "CLOCK_LOCAL"
+      }
+    },
+    {
+      "id": "warn",
+      "repo": "local",
+      "paths": ["/proc/1/mem", "/source/docs"],
+      "schedule": {
+        "maxFrequencyDays": 1
+      }
+    }
+  ],
+  "auth": {
+    "users": [
+      {
+        "name": "gladys",
+        "passwordBcrypt": "$2a$10$exampleexampleexampleexampleexampleexampleexampleexam"
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "operations": [
+    {
+      "id": "12",
+      "modno": "22",
+      "flowId": "12",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "big",
+      "instanceId": "gladys-test",
+      "status": "STATUS_PENDING",
+      "unixTimeStartMs": "1792543790597",
+      "operationBackup": {}
+    },
+    {
+      "id": "16",
+      "modno": "28",
+      "flowId": "16",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "big",
+      "instanceId": "gladys-test",
+      "status": "STATUS_INPROGRESS",
+      "unixTimeStartMs": "1792522190740",
+      "logref": "t-9d9f7d8f-5ad5-41f6-a782-5f5aa2a0dbf1",
+      "operationBackup": {
+        "lastStatus": {
+          "status": {
+            "percentDone": 0.139947265,
+            "totalFiles": "1",
+            "totalBytes": "600000000",
+            "bytesDone": "83968359",
+            "currentFile": ["/source/big/blob.bin"]
+          }
+        }
+      }
+    }
+  ]
+}

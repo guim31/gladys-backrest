@@ -1,67 +1,187 @@
-# Template de démonstration
+# Backrest
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+[Backrest](https://github.com/garethgeorge/backrest) est une interface web et
+un planificateur pour les sauvegardes [restic](https://restic.net/). Cette
+intégration amène dans Gladys les plans et les dépôts d'une instance Backrest :
+chaque plan devient un appareil avec son état, sa dernière sauvegarde réussie,
+les données qu'il a ajoutées et les erreurs de sa dernière sauvegarde ; chaque
+dépôt montre sa taille et ses instantanés. Des scènes peuvent réagir quand
+**n'importe quelle** sauvegarde réussit, échoue ou est en retard (pas de
+réussite depuis trop longtemps), un widget du tableau de bord liste d'abord les
+plans en échec, et une scène peut lancer une sauvegarde.
 
-## Ce que vous obtenez
+Testée avec un vrai Backrest 1.14 (image Docker `garethgeorge/backrest`, dépôt
+restic local) : une sauvegarde qui réussit, une dont le dossier manque, une
+avec un fichier illisible, une sauvegarde lancée depuis l'intégration, avec et
+sans authentification. Pas encore testée sur un vrai Gladys : vos retours sont
+les bienvenus sur [les issues](https://github.com/guim31/gladys-backrest/issues).
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+## Prérequis
 
-## Configuration
+- Gladys Assistant 5.1.0 ou plus récent.
+- Backrest 1.x (testé avec la 1.14.1), son interface web joignable depuis la
+  machine de Gladys (port 9898 par défaut).
+- Si son authentification est activée : un nom d'utilisateur et son mot de
+  passe (Backrest, **Settings → Users**). Mieux vaut un utilisateur dédié que
+  le vôtre.
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+L'intégration lit Backrest toutes les 5 minutes par défaut (toutes les 30
+secondes pendant une sauvegarde) : une requête légère par plan, plus
+l'historique de chaque dépôt une fois par heure. Rien ne sort de votre réseau.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+## Mise en route
 
-## Actions
+### 1. Vérifier l'adresse de Backrest
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Ouvrez Backrest dans un navigateur et notez son adresse, par exemple
+`http://192.168.1.2:9898`. Par défaut, Backrest n'écoute que sa propre machine
+(`127.0.0.1:9898`) : pour le joindre depuis Gladys, lancez-le avec
+`BACKREST_PORT=0.0.0.0:9898` (c'est déjà le cas de l'image Docker).
 
-## Scènes
+### 2. Configurer l'intégration
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Dans Gladys, **Intégrations → Backrest → Configuration** :
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+- **Adresse de Backrest** : l'adresse notée plus haut. Une adresse seule
+  (`192.168.1.2`) utilise le port 9898 ; une adresse copiée du navigateur
+  fonctionne aussi.
+- **Nom d'utilisateur** et **Mot de passe** : un utilisateur de Backrest.
+  Laissez-les vides si son authentification est désactivée.
+- **Intervalle de rafraîchissement** : 1, 5 (par défaut) ou 15 minutes.
+- **En retard après** : quand un plan sans réussite passe en retard.
+  _Automatique_ (par défaut) suit la planification de chaque plan : sa période
+  (« toutes les 24 heures ») ou le plus long écart de son expression cron, plus
+  un quart de celle-ci (une heure au moins) : 30 heures pour un plan quotidien,
+  90 heures pour un plan lancé les jours ouvrés seulement. Un plan sans
+  planification n'est alors jamais en retard. Ou un délai fixe, de 12 heures à
+  une semaine, pour tous les plans.
+- **Autoriser le lancement des sauvegardes** : permet à l'action de scène
+  « Lancer une sauvegarde » de fonctionner. Désactivez-le si personne ne doit
+  lancer de sauvegarde depuis Gladys.
+- **Langue des noms** : langue des noms des fonctionnalités, des états et des
+  résultats de scène.
+
+**Tester la connexion** lit Backrest et résume : le nombre de plans et de
+dépôts, en échec et en retard.
+
+### 3. Ajouter les plans
+
+Dans l'onglet **Découverte**, ajoutez les plans et les dépôts à suivre, et
+l'appareil « Backrest » pour l'instance. Les déclencheurs de scène fonctionnent
+pour tous les plans, ajoutés ou non.
+
+## Les appareils
+
+Chaque plan :
+
+| Fonctionnalité                           | Valeur                                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------- |
+| État                                     | OK, Avec avertissements, En échec, En retard, En cours ou Jamais lancé |
+| Dernière sauvegarde réussie              | jour/mois heures:minutes, « - » s'il n'y en a pas                      |
+| Heures depuis la dernière réussite       | en heures                                                              |
+| Durée de la dernière sauvegarde          | en secondes                                                            |
+| Données ajoutées (dernière sauvegarde)   | nouvelles données envoyées au dépôt, en Mo                             |
+| Instantanés                              | instantanés de ce plan conservés dans le dépôt                         |
+| Erreurs de la dernière sauvegarde        | 1 si elle a échoué, 0 sinon                                            |
+| Avertissements de la dernière sauvegarde | nombre de fichiers qu'elle n'a pas pu lire                             |
+| En cours                                 | 1 pendant que ce plan sauvegarde                                       |
+| Prochaine sauvegarde planifiée           | jour/mois heures:minutes, « - » sans planification                     |
+
+Chaque dépôt :
+
+- **Taille du dépôt** : en Mo, d'après la dernière opération « stats » de
+  Backrest (après un prune, une fois par jour au plus ; **Stats** sur la page du
+  dépôt dans Backrest en lance une) ;
+- **Instantanés** : les instantanés qu'il contient.
+
+L'appareil « Backrest », pour l'instance :
+
+- **Sauvegarde en cours** : 1 ou 0 ;
+- **Progression** : en % ;
+- **Plan actuel** : son nom, « - » s'il n'y en a pas ;
+- **Plans en échec** et **Plans en retard** : combien.
+
+Une sauvegarde « réussit » quand restic crée un instantané, avec ou sans
+avertissements (fichiers illisibles). Elle « échoue » quand aucun instantané
+n'est créé (dossier manquant, dépôt injoignable ou verrouillé…). L'état montre
+d'abord ce qui demande votre attention : un plan en échec affiche « En échec »
+même s'il est aussi en retard. Les essais à blanc (dry run) sont ignorés.
 
 ## Tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Le widget **Backrest** montre le nombre de plans en échec, en retard et OK,
+puis une ligne par plan : en échec d'abord, puis en retard, en cours, avec
+avertissements, jamais lancés, OK, avec la dernière réussite (ou la progression
+de la sauvegarde en cours). Tous les plans par défaut, ou ceux choisis dans ses
+réglages. Le bouton **Actualiser** relit Backrest.
+
+## Scènes
+
+### Déclencheurs
+
+- **Une sauvegarde réussit** : une sauvegarde se termine par un instantané,
+  avec ou sans avertissements. Informations : plan, durée (minutes),
+  avertissements, données ajoutées, instantanés.
+- **Une sauvegarde échoue** : une sauvegarde se termine sans instantané. Le
+  filtre **Résultat** choisit les erreurs, les avertissements, ou les deux
+  (vide). Informations : plan, l'erreur (ou le premier fichier non lu),
+  erreurs, avertissements.
+- **Un plan est en retard** : un plan n'a pas réussi depuis plus longtemps que
+  le délai « En retard après ». Une fois par dépassement, de nouveau après une
+  nouvelle réussite. Informations : plan, heures depuis la dernière réussite,
+  dernière réussite.
+
+Chaque déclencheur peut se limiter à certains plans (vide : tous).
+
+### Actions
+
+- **État d'un plan** : lit l'état d'un plan pour les actions suivantes : en
+  échec, en retard, l'état en toutes lettres, le nom, la dernière réussite, les
+  heures depuis la dernière réussite (-1 s'il n'y en a pas), et une phrase
+  toute prête (« photos : En échec, dernière réussite 18/10 02:05. »).
+- **Lancer une sauvegarde** : lance maintenant une sauvegarde du plan (Backrest
+  la met en file derrière la tâche en cours). Une erreur dans les premières
+  secondes (dossier manquant, plan supprimé) est l'erreur de l'action ; ensuite,
+  les déclencheurs disent comment elle s'est terminée. Refusée quand
+  « Autoriser le lancement des sauvegardes » est désactivé.
+
+### Idées de scènes
+
+- **Une sauvegarde échoue** → envoyer un message avec le plan et son erreur,
+  pris dans les informations du déclencheur.
+- **Un plan est en retard** → prévenir avec le plan et les heures depuis sa
+  dernière réussite : l'ordinateur qui garde les photos n'a pas été allumé
+  depuis des jours.
+- Chaque dimanche à 10 h → **État d'un plan** → envoyer la phrase ; ou
+  sauvegarder les documents en quittant la maison, avec **Lancer une
+  sauvegarde**.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« Backrest ne répond pas »** : vérifiez l'adresse et le port depuis la
+  machine de Gladys, et que Backrest écoute le réseau
+  (`BACKREST_PORT=0.0.0.0:9898`).
+- **« nom d'utilisateur ou mot de passe manquant ou refusé par Backrest »** :
+  son authentification est activée : saisissez le nom et le mot de passe d'un
+  utilisateur de Backrest.
+- **« aucun Backrest à cette adresse »** : l'adresse pointe vers autre chose.
+- **« certificat refusé »** : un certificat auto-signé sur un proxy inverse ;
+  utilisez l'adresse `http://` sur votre réseau.
+- **Taille du dépôt vide** : Backrest ne l'a pas encore calculée ; lancez
+  **Stats** depuis la page du dépôt dans Backrest.
+- **Un plan ne passe jamais en retard** : en _Automatique_, un plan sans
+  planification ne peut pas être en retard ; choisissez un délai fixe. Un plan
+  qui n'a jamais réussi n'est pas en retard non plus : il affiche En échec ou
+  Jamais lancé.
+- Pour en voir plus, passez la variable `LOG_LEVEL` de l'intégration à `debug`.
+
+## Limites
+
+- Une instance Backrest par intégration ; les plans des autres instances
+  synchronisées avec elle ne sont pas montrés.
+- Backrest garde ses opérations une trentaine de jours : au-delà, la dernière
+  réussite est celle dont l'intégration se souvient.
+- L'intégration ne restaure, ne purge et ne modifie rien : elle surveille les
+  plans, et lance une sauvegarde si c'est autorisé.
+- Sans lien avec Backrest ni restic. Signalez un problème ou une idée sur
+  [les issues](https://github.com/guim31/gladys-backrest/issues).

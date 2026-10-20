@@ -1,177 +1,744 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Backrest",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Your Backrest plans in Gladys: their state, and an alert when a backup fails or stops running.",
+    "fr": "Vos plans Backrest dans Gladys : leur état, et une alerte si une sauvegarde échoue ou est en retard.",
+    "de": "Deine Backrest-Pläne in Gladys: ihr Zustand und ein Alarm, wenn eine Sicherung fehlschlägt.",
+    "es": "Sus planes de Backrest en Gladys: su estado y una alerta si una copia falla o deja de ejecutarse."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-backrest:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-backrest/main/cover.png",
+  "categories": ["services", "network"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Backrest",
+        "fr": "Votre Backrest",
+        "de": "Dein Backrest",
+        "es": "Su Backrest"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Backrest, the web interface of restic. Enter its address, and its username and password if its authentication is enabled. Then add the plans and repositories to follow from the Discover tab.",
+        "fr": "Backrest, l'interface web de restic. Saisissez son adresse, et son nom d'utilisateur et son mot de passe si son authentification est activée. Ajoutez ensuite les plans et les dépôts à suivre depuis l'onglet Découverte.",
+        "de": "Backrest, die Weboberfläche von restic. Gib seine Adresse ein und, wenn seine Anmeldung aktiv ist, Benutzername und Passwort. Lege dann die Pläne und Repositorys im Tab „Entdecken“ an.",
+        "es": "Backrest, la interfaz web de restic. Introduzca su dirección y, si su autenticación está activada, su usuario y su contraseña. Después añada los planes y repositorios desde la pestaña Descubrir."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-backrest/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Einrichtungsanleitung",
+            "es": "Guía de instalación"
+          }
+        },
+        {
+          "url": "https://garethgeorge.github.io/backrest/",
+          "label": {
+            "en": "Backrest documentation",
+            "fr": "Documentation de Backrest",
+            "de": "Backrest-Dokumentation",
+            "es": "Documentación de Backrest"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "url",
+      "type": "string",
+      "label": {
+        "en": "Backrest address",
+        "fr": "Adresse de Backrest",
+        "de": "Backrest-Adresse",
+        "es": "Dirección de Backrest"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "The address of the web interface, port 9898 by default.",
+        "fr": "L'adresse de l'interface web, port 9898 par défaut.",
+        "de": "Die Adresse der Weboberfläche, standardmäßig Port 9898.",
+        "es": "La dirección de la interfaz web, puerto 9898 por defecto."
+      },
+      "placeholder": {
+        "en": "e.g. http://192.168.1.2:9898",
+        "fr": "ex. http://192.168.1.2:9898",
+        "de": "z. B. http://192.168.1.2:9898",
+        "es": "p. ej. http://192.168.1.2:9898"
+      },
+      "required": true
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "Username",
+        "fr": "Nom d'utilisateur",
+        "de": "Benutzername",
+        "es": "Usuario"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "A user of Backrest (Settings → Users). Empty if its authentication is disabled.",
+        "fr": "Un utilisateur de Backrest (Paramètres → Utilisateurs). Vide si son authentification est désactivée.",
+        "de": "Ein Benutzer von Backrest (Einstellungen → Benutzer). Leer, wenn seine Anmeldung deaktiviert ist.",
+        "es": "Un usuario de Backrest (Ajustes → Usuarios). Vacío si su autenticación está desactivada."
+      },
+      "required": false
     },
     {
-      "key": "unit",
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe",
+        "de": "Passwort",
+        "es": "Contraseña"
+      },
+      "description": {
+        "en": "The password of this user. Empty if the authentication of Backrest is disabled.",
+        "fr": "Le mot de passe de cet utilisateur. Vide si l'authentification de Backrest est désactivée.",
+        "de": "Das Passwort dieses Benutzers. Leer, wenn die Anmeldung von Backrest deaktiviert ist.",
+        "es": "La contraseña de este usuario. Vacía si la autenticación de Backrest está desactivada."
+      },
+      "required": false
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "poll_interval",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often Backrest is read. Every 30 seconds while a backup runs.",
+        "fr": "À quelle fréquence Backrest est lu. Toutes les 30 secondes pendant une sauvegarde.",
+        "de": "Wie oft Backrest gelesen wird. Alle 30 Sekunden während einer Sicherung.",
+        "es": "Con qué frecuencia se lee Backrest. Cada 30 segundos durante una copia."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "300",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        },
+        {
+          "value": "900",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "overdue_hours",
+      "type": "select",
+      "label": {
+        "en": "Overdue after",
+        "fr": "En retard après",
+        "de": "Überfällig nach",
+        "es": "Con retraso tras"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "A plan without a successful backup for this long is overdue. Automatic: the longest gap of its schedule plus a margin; a plan without schedule is then never overdue.",
+        "fr": "Un plan sans sauvegarde réussie depuis ce délai est en retard. Automatique : le plus long écart de sa planification plus une marge ; un plan sans planification n'est alors jamais en retard.",
+        "de": "Ein Plan ohne erfolgreiche Sicherung seit dieser Zeit ist überfällig. Automatisch: der längste Abstand seines Zeitplans plus ein Puffer; ein Plan ohne Zeitplan ist dann nie überfällig.",
+        "es": "Un plan sin copia correcta desde hace este tiempo tiene retraso. Automático: el mayor intervalo de su programación más un margen; un plan sin programación nunca tiene retraso."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "en": "Automatic (from the schedule)",
+            "fr": "Automatique (selon la planification)",
+            "de": "Automatisch (nach Zeitplan)",
+            "es": "Automático (según la programación)"
+          }
+        },
+        {
+          "value": "12",
+          "label": {
+            "en": "12 hours",
+            "fr": "12 heures",
+            "de": "12 Stunden",
+            "es": "12 horas"
+          }
+        },
+        {
+          "value": "24",
+          "label": {
+            "en": "24 hours",
+            "fr": "24 heures",
+            "de": "24 Stunden",
+            "es": "24 horas"
+          }
+        },
+        {
+          "value": "48",
+          "label": {
+            "en": "2 days",
+            "fr": "2 jours",
+            "de": "2 Tage",
+            "es": "2 días"
+          }
+        },
+        {
+          "value": "72",
+          "label": {
+            "en": "3 days",
+            "fr": "3 jours",
+            "de": "3 Tage",
+            "es": "3 días"
+          }
+        },
+        {
+          "value": "168",
+          "label": {
+            "en": "1 week",
+            "fr": "1 semaine",
+            "de": "1 Woche",
+            "es": "1 semana"
+          }
+        }
+      ]
+    },
+    {
+      "key": "allow_start",
+      "type": "boolean",
+      "label": {
+        "en": "Allow starting backups",
+        "fr": "Autoriser le lancement des sauvegardes",
+        "de": "Starten von Sicherungen erlauben",
+        "es": "Permitir iniciar copias"
+      },
+      "description": {
+        "en": "Lets the scene action \"Start a backup\" run a plan in Backrest.",
+        "fr": "Permet à l'action de scène « Lancer une sauvegarde » d'exécuter un plan dans Backrest.",
+        "de": "Erlaubt der Szenenaktion „Sicherung starten“, einen Plan in Backrest auszuführen.",
+        "es": "Permite que la acción de escena «Iniciar una copia» ejecute un plan en Backrest."
+      },
+      "required": false,
+      "default": true
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
+      },
+      "description": {
+        "en": "Language of the feature names (set when a device is added), of the states and of the scene results.",
+        "fr": "Langue des noms des fonctionnalités (fixés à l'ajout d'un appareil), des états et des résultats de scène.",
+        "de": "Sprache der Funktionsnamen (beim Anlegen eines Geräts festgelegt), der Zustände und der Szenen-Ergebnisse.",
+        "es": "Idioma de los nombres de las funciones (fijados al añadir un dispositivo), de los estados y de los resultados de escena."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "backup_succeeded",
+      "label": {
+        "en": "A backup succeeds",
+        "fr": "Une sauvegarde réussit",
+        "de": "Eine Sicherung gelingt",
+        "es": "Una copia se completa"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A backup of a Backrest plan ends, with or without warnings.",
+        "fr": "Une sauvegarde d'un plan Backrest se termine, avec ou sans avertissements.",
+        "de": "Eine Sicherung eines Backrest-Plans endet, mit oder ohne Warnungen.",
+        "es": "Una copia de un plan de Backrest termina, con o sin avisos."
       },
       "fields": [
         {
           "key": "device",
-          "type": "select",
+          "type": "multi_select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Plans (empty: any)",
+            "fr": "Plans (vide : tous)",
+            "de": "Pläne (leer: alle)",
+            "es": "Planes (vacío: todos)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "plan",
+          "type": "string",
+          "label": {
+            "en": "Plan",
+            "fr": "Plan",
+            "de": "Plan",
+            "es": "Plan"
+          }
         },
         {
-          "key": "target",
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Duration (minutes)",
+            "fr": "Durée (minutes)",
+            "de": "Dauer (Minuten)",
+            "es": "Duración (minutos)"
+          }
+        },
+        {
+          "key": "warnings",
+          "type": "number",
+          "label": {
+            "en": "Warnings",
+            "fr": "Avertissements",
+            "de": "Warnungen",
+            "es": "Avisos"
+          }
+        },
+        {
+          "key": "added",
+          "type": "string",
+          "label": {
+            "en": "Data added",
+            "fr": "Données ajoutées",
+            "de": "Hinzugefügte Daten",
+            "es": "Datos añadidos"
+          }
+        },
+        {
+          "key": "snapshots",
+          "type": "number",
+          "label": {
+            "en": "Snapshots",
+            "fr": "Instantanés",
+            "de": "Snapshots",
+            "es": "Instantáneas"
+          }
+        }
+      ]
+    },
+    {
+      "key": "backup_failed",
+      "label": {
+        "en": "A backup fails",
+        "fr": "Une sauvegarde échoue",
+        "de": "Eine Sicherung schlägt fehl",
+        "es": "Una copia falla"
+      },
+      "description": {
+        "en": "A backup of a Backrest plan fails, or ends with warnings if chosen in the result filter.",
+        "fr": "Une sauvegarde d'un plan Backrest échoue, ou se termine avec avertissements si le filtre du résultat les inclut.",
+        "de": "Eine Sicherung eines Backrest-Plans schlägt fehl, oder endet mit Warnungen, wenn im Ergebnisfilter gewählt.",
+        "es": "Una copia de un plan de Backrest falla, o termina con avisos si se eligen en el filtro del resultado."
+      },
+      "fields": [
+        {
+          "key": "device",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "source": "devices",
+          "label": {
+            "en": "Plans (empty: any)",
+            "fr": "Plans (vide : tous)",
+            "de": "Pläne (leer: alle)",
+            "es": "Planes (vacío: todos)"
+          }
+        },
+        {
+          "key": "result",
+          "type": "multi_select",
+          "label": {
+            "en": "Result (empty: errors and warnings)",
+            "fr": "Résultat (vide : erreurs et avertissements)",
+            "de": "Ergebnis (leer: Fehler und Warnungen)",
+            "es": "Resultado (vacío: errores y avisos)"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "error",
+              "label": {
+                "en": "Errors",
+                "fr": "Erreurs",
+                "de": "Fehler",
+                "es": "Errores"
+              }
+            },
+            {
+              "value": "warning",
+              "label": {
+                "en": "Warnings",
+                "fr": "Avertissements",
+                "de": "Warnungen",
+                "es": "Avisos"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "plan",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Plan",
+            "fr": "Plan",
+            "de": "Plan",
+            "es": "Plan"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "First error or warning",
+            "fr": "Première erreur ou avertissement",
+            "de": "Erster Fehler oder erste Warnung",
+            "es": "Primer error o aviso"
+          }
+        },
+        {
+          "key": "errors",
+          "type": "number",
+          "label": {
+            "en": "Errors",
+            "fr": "Erreurs",
+            "de": "Fehler",
+            "es": "Errores"
+          }
+        },
+        {
+          "key": "warnings",
+          "type": "number",
+          "label": {
+            "en": "Warnings",
+            "fr": "Avertissements",
+            "de": "Warnungen",
+            "es": "Avisos"
+          }
+        }
+      ]
+    },
+    {
+      "key": "backup_overdue",
+      "label": {
+        "en": "A plan is overdue",
+        "fr": "Un plan est en retard",
+        "de": "Ein Plan ist überfällig",
+        "es": "Un plan tiene retraso"
+      },
+      "description": {
+        "en": "A plan has had no successful backup for longer than the \"Overdue after\" delay of the configuration.",
+        "fr": "Un plan n'a pas eu de sauvegarde réussie depuis plus longtemps que le délai « En retard après » de la configuration.",
+        "de": "Ein Plan hatte länger als die Zeit „Überfällig nach“ der Konfiguration keine erfolgreiche Sicherung.",
+        "es": "Un plan no ha tenido una copia correcta desde hace más que el plazo «Con retraso tras» de la configuración."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "multi_select",
+          "source": "devices",
+          "label": {
+            "en": "Plans (empty: any)",
+            "fr": "Plans (vide : tous)",
+            "de": "Pläne (leer: alle)",
+            "es": "Planes (vacío: todos)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "plan",
+          "type": "string",
+          "label": {
+            "en": "Plan",
+            "fr": "Plan",
+            "de": "Plan",
+            "es": "Plan"
+          }
+        },
+        {
+          "key": "hours_since_success",
+          "type": "number",
+          "label": {
+            "en": "Hours since last success",
+            "fr": "Heures depuis la dernière réussite",
+            "de": "Stunden seit letztem Erfolg",
+            "es": "Horas desde el último éxito"
+          }
+        },
+        {
+          "key": "last_success",
+          "type": "string",
+          "label": {
+            "en": "Last success",
+            "fr": "Dernière réussite",
+            "de": "Letzter Erfolg",
+            "es": "Último éxito"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "get_backup_status",
+      "label": {
+        "en": "State of a plan",
+        "fr": "État d'un plan",
+        "de": "Zustand eines Plans",
+        "es": "Estado de un plan"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Reads the state of a Backrest plan for the next actions: failed, overdue, in words, and a ready-made sentence.",
+        "fr": "Lit l'état d'un plan Backrest pour les actions suivantes : en échec, en retard, en toutes lettres, et une phrase toute prête.",
+        "de": "Liest den Zustand eines Backrest-Plans für die nächsten Aktionen: fehlgeschlagen, überfällig, in Worten, und einen fertigen Satz.",
+        "es": "Lee el estado de un plan de Backrest para las siguientes acciones: fallido, con retraso, en palabras, y una frase lista."
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Plan",
+            "fr": "Plan",
+            "de": "Plan",
+            "es": "Plan"
+          },
           "required": true
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
+          "key": "failed",
           "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "label": {
+            "en": "Failed",
+            "fr": "En échec",
+            "de": "Fehlgeschlagen",
+            "es": "Fallido"
+          }
+        },
+        {
+          "key": "overdue",
+          "type": "boolean",
+          "label": {
+            "en": "Overdue",
+            "fr": "En retard",
+            "de": "Überfällig",
+            "es": "Con retraso"
+          }
+        },
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "State",
+            "fr": "État",
+            "de": "Zustand",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "Plan",
+            "fr": "Plan",
+            "de": "Plan",
+            "es": "Plan"
+          }
+        },
+        {
+          "key": "last_success",
+          "type": "string",
+          "label": {
+            "en": "Last success",
+            "fr": "Dernière réussite",
+            "de": "Letzter Erfolg",
+            "es": "Último éxito"
+          }
+        },
+        {
+          "key": "hours_since_success",
+          "type": "number",
+          "label": {
+            "en": "Hours since last success",
+            "fr": "Heures depuis la dernière réussite",
+            "de": "Stunden seit letztem Erfolg",
+            "es": "Horas desde el último éxito"
+          }
+        },
+        {
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence",
+            "fr": "Phrase",
+            "de": "Satz",
+            "es": "Frase"
+          }
+        }
+      ]
+    },
+    {
+      "key": "start_backup",
+      "label": {
+        "en": "Start a backup",
+        "fr": "Lancer une sauvegarde",
+        "de": "Sicherung starten",
+        "es": "Iniciar una copia"
+      },
+      "description": {
+        "en": "Runs a backup of the Backrest plan now. Can be disabled in the configuration.",
+        "fr": "Lance maintenant une sauvegarde du plan Backrest. Désactivable dans la configuration.",
+        "de": "Startet jetzt eine Sicherung des Backrest-Plans. In der Konfiguration abschaltbar.",
+        "es": "Inicia ahora una copia del plan de Backrest. Se puede desactivar en la configuración."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Plan",
+            "fr": "Plan",
+            "de": "Plan",
+            "es": "Plan"
+          },
+          "required": true
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "backrest",
+      "label": {
+        "en": "Backrest",
+        "fr": "Backrest",
+        "de": "Backrest",
+        "es": "Backrest"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Failed plans first, then overdue ones, then the others, with their last success.",
+        "fr": "Les plans en échec d'abord, puis en retard, puis les autres, avec leur dernière réussite.",
+        "de": "Erst fehlgeschlagene Pläne, dann überfällige, dann die anderen, mit letztem Erfolg.",
+        "es": "Primero los planes fallidos, luego los retrasados y los demás, con su último éxito."
+      },
+      "icon": "hard-drive",
+      "action_timeout_seconds": 30,
+      "settings": [
+        {
+          "key": "plans",
+          "type": "multi_select",
+          "source": "devices",
+          "label": {
+            "en": "Plans (empty: all)",
+            "fr": "Plans (vide : tous)",
+            "de": "Pläne (leer: alle)",
+            "es": "Planes (vacío: todos)"
+          },
+          "description": {
+            "en": "Empty: every plan of Backrest. Only the devices added to Gladys can be chosen.",
+            "fr": "Vide : tous les plans de Backrest. Seuls les appareils ajoutés à Gladys peuvent être choisis.",
+            "de": "Leer: alle Pläne von Backrest. Nur die in Gladys angelegten Geräte sind wählbar.",
+            "es": "Vacío: todos los planes de Backrest. Solo se pueden elegir los dispositivos añadidos a Gladys."
+          },
+          "required": false
+        }
+      ]
     }
   ]
 }

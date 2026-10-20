@@ -1,0 +1,97 @@
+{
+  "operations": [
+    {
+      "id": "3",
+      "modno": "7",
+      "flowId": "3",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "documents",
+      "instanceId": "gladys-test",
+      "snapshotId": "113aa1d6c0483df066f919d4cf2cf9ea1bc883cbf6a5686c52b00fa85a819b56",
+      "status": "STATUS_SUCCESS",
+      "unixTimeStartMs": "1792522017797",
+      "unixTimeEndMs": "1792522019296",
+      "logref": "t-930fc906-b884-4827-9ac5-28e902aaff51",
+      "operationBackup": {
+        "lastStatus": {
+          "summary": {
+            "filesNew": "2",
+            "dirsNew": "2",
+            "dataBlobs": "2",
+            "treeBlobs": "3",
+            "dataAdded": "301411",
+            "totalFilesProcessed": "2",
+            "totalBytesProcessed": "300006",
+            "totalDuration": 0.754418377,
+            "snapshotId": "113aa1d6c0483df066f919d4cf2cf9ea1bc883cbf6a5686c52b00fa85a819b56"
+          }
+        }
+      }
+    },
+    {
+      "id": "4",
+      "modno": "11",
+      "flowId": "3",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "documents",
+      "instanceId": "gladys-test",
+      "status": "STATUS_SUCCESS",
+      "unixTimeStartMs": "1792522019998",
+      "unixTimeEndMs": "1792522020689",
+      "logref": "t-ffe73d6c-4673-4bf7-8d7d-d67c5e827ec2",
+      "operationForget": {
+        "policy": {
+          "policyKeepLastN": 5
+        }
+      }
+    },
+    {
+      "id": "5",
+      "modno": "8",
+      "flowId": "3",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "documents",
+      "instanceId": "gladys-test",
+      "snapshotId": "113aa1d6c0483df066f919d4cf2cf9ea1bc883cbf6a5686c52b00fa85a819b56",
+      "status": "STATUS_SUCCESS",
+      "unixTimeStartMs": "1792522018505",
+      "unixTimeEndMs": "1792522019259",
+      "operationIndexSnapshot": {
+        "snapshot": {
+          "id": "113aa1d6c0483df066f919d4cf2cf9ea1bc883cbf6a5686c52b00fa85a819b56",
+          "unixTimeMs": "1792522018505",
+          "hostname": "backrest-test",
+          "username": "root",
+          "tree": "daf5bfe08175b7867610804536c5c350955a68b8b27a66ebc4e1c55546c5961e",
+          "paths": ["/source/docs"],
+          "tags": ["plan:documents", "created-by:gladys-test"],
+          "summary": {
+            "filesNew": "2",
+            "dirsNew": "2",
+            "dataBlobs": "2",
+            "treeBlobs": "3",
+            "dataAdded": "301411",
+            "totalFilesProcessed": "2",
+            "totalBytesProcessed": "300006",
+            "totalDuration": 0.754
+          }
+        }
+      }
+    },
+    {
+      "id": "13",
+      "modno": "23",
+      "flowId": "13",
+      "repoId": "local",
+      "repoGuid": "a7ac472786f6313fb06f52bcc13b32c654ec6bd9abd8856b91b327ec750ad164",
+      "planId": "documents",
+      "instanceId": "gladys-test",
+      "status": "STATUS_PENDING",
+      "unixTimeStartMs": "1792608419296",
+      "operationBackup": {}
+    }
+  ]
+}
