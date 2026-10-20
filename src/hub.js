@@ -390,20 +390,25 @@ export class BackrestHub {
       if (!repo.guid) {
         continue; // not initialized yet: no operation
       }
-      // The last backup ended of each plan of the repository: a new one changes the history.
+      // The last operation ended of each plan of the repository, and its
+      // snapshots forgotten (forget marks the existing operations, no new
+      // id): a change of either changes the history.
       const signature = JSON.stringify(
         config.plans
           .filter((plan) => plan.repo === repo.id)
-          .map((plan) => [
-            plan.id,
-            Math.max(
-              0,
-              ...operations
-                .get(plan.id)
-                .filter((op) => op.kind !== 'backup' || ENDED.has(op.status))
-                .map((op) => op.id),
-            ),
-          ]),
+          .map((plan) => {
+            const ops = operations.get(plan.id);
+            return [
+              plan.id,
+              Math.max(
+                0,
+                ...ops
+                  .filter((op) => op.kind !== 'backup' || ENDED.has(op.status))
+                  .map((op) => op.id),
+              ),
+              ops.filter((op) => op.kind === 'snapshot' && op.forgot).length,
+            ];
+          }),
       );
       const cached = this.histories.get(repo.id);
       if (
@@ -418,8 +423,12 @@ export class BackrestHub {
         const history = summarizeRepo(await client.repoOperations(repo.guid), config.instance);
         histories.set(repo.id, { signature, history, at: now });
       } catch (err) {
-        // A busy instance: keep what was read, try again next time.
-        if (!(err instanceof BackrestError) || err.kind !== ERROR_KINDS.HTTP) {
+        // A busy instance, or a history too long to read in time: keep what
+        // was read, try again next time. The plans are read all the same.
+        if (
+          !(err instanceof BackrestError) ||
+          [ERROR_KINDS.AUTH, ERROR_KINDS.NOT_BACKREST].includes(err.kind)
+        ) {
           throw err;
         }
         logger.debug(`History of ${repo.id} unreadable: ${err.message}`);
@@ -839,6 +848,9 @@ export class BackrestHub {
     logger.info(`${plan.id}: backup started from Gladys`);
     // Shown as running at once; read again in the background, every 30
     // seconds while it runs.
+    if (client !== this.client) {
+      return; // reconfigured meanwhile: another instance now
+    }
     if (outcome === 'running') {
       this.activeId = plan.id;
     }

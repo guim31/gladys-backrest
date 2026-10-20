@@ -267,11 +267,17 @@ quatre plans : réussi, dossier manquant, fichier illisible `/proc/1/mem`, gros 
   `operationIndexSnapshot` non `forgot`. Lus dans l'historique complet du dépôt (`selector.repoGuid`), une
   fois par heure ou quand une opération de l'un de ses plans se termine ; Backrest purge ses opérations après
   ~30 jours (100 par type), d'où la dernière réussite gardée dans `/data`.
+  Un forget marque `forgot` sur les opérations existantes **sans nouvel id** : la signature du cache compte
+  aussi les instantanés oubliés. Une erreur sur cet historique (délai de 60 s, 503…) ne bloque pas la lecture
+  des plans : seuls `auth` et `not_backrest` remontent.
+- Les messages de restic (`displayMessage`, erreurs Connect) peuvent citer l'URI d'un dépôt avec ses
+  identifiants : `cleanMessage` masque `//user:pass@`. La taille des réponses est comptée en lisant le flux
+  (une réponse chunked n'a pas de `content-length`).
 - **`Backup { value: planId }` ne répond qu'à la fin de la sauvegarde** (`scheduleTaskAndWait`) : l'action
   attend 3 s ; une erreur avant (dossier manquant, plan supprimé) est l'erreur de l'action, après, la
   sauvegarde tourne et les déclencheurs disent la fin. Annuler la requête n'annule pas la sauvegarde ; undici
   coupe la requête après 300 s (`headersTimeout`), sans conséquence (journal debug).
 - Planification : `maxFrequencyHours`/`maxFrequencyDays`, ou `cron` (5 champs) : le retard automatique prend
-  le plus long écart du cron sur deux mois (`src/cron.js`) + max(1 h, période/4), la marge de Backrest
+  le plus long écart du cron sur 400 jours (`src/cron.js`, jour par jour ; « 1/2 » en jour de semaine vaut 1,3,5) + max(1 h, période/4), la marge de Backrest
   (`overdueGraceFactor` 1,25).
 - Écoute par défaut sur `127.0.0.1:9898` hors Docker ; l'image Docker met `BACKREST_PORT=0.0.0.0:9898`.

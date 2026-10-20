@@ -12,6 +12,7 @@ import { readFile } from 'node:fs/promises';
 import {
   BackrestClient,
   ERROR_KINDS,
+  cleanMessage,
   normalizeConfig,
   normalizeOperation,
   normalizeSchedule,
@@ -41,6 +42,10 @@ test('the config of a real Backrest: plans and repositories, no password kept', 
   );
   assert.ok(!JSON.stringify(config).includes('password'));
   assert.equal(normalizeSchedule({ disabled: true }), null);
+  assert.equal(
+    cleanMessage('Fatal: unable to open repo at rest:https://backup:s3cret@192.0.2.20/repo'),
+    'Fatal: unable to open repo at rest:https://***@192.0.2.20/repo',
+  );
   assert.equal(normalizeConfig({ hello: 'world' }), null);
 });
 

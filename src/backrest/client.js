@@ -72,12 +72,18 @@ export async function httpRequest(url, { method = 'POST', headers = {}, body, ti
     redirect: 'manual',
     signal: AbortSignal.timeout(timeoutMs ?? 15_000),
   });
-  const length = Number(response.headers.get('content-length') ?? 0);
-  if (length > MAX_BODY_BYTES) {
-    await response.body?.cancel();
-    throw new Error('Response too large');
+  // Counted while read: a chunked answer has no content-length.
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of response.body ?? []) {
+    size += chunk.length;
+    if (size > MAX_BODY_BYTES) {
+      await response.body.cancel().catch(() => {});
+      throw new Error('Response too large');
+    }
+    chunks.push(chunk);
   }
-  return { status: response.status, body: await response.text() };
+  return { status: response.status, body: Buffer.concat(chunks).toString('utf8') };
 }
 
 // --- Parsing ---------------------------------------------------------------------
@@ -92,8 +98,10 @@ const text = (value) => (typeof value === 'string' ? value : '');
 
 /** A message for a person: one line, 200 characters at most. */
 export function cleanMessage(value) {
+  // A restic message may quote a repository URI with its credentials.
   const line = text(value)
     .replace(/\s*\n\s*/g, ': ')
+    .replace(/\/\/[^/\s:@]+:[^@\s]+@/g, '//***@')
     .trim();
   return line.length > 200 ? `${line.slice(0, 199)}…` : line;
 }
@@ -311,8 +319,12 @@ export class BackrestClient {
     return config;
   }
 
-  async operations(selector, lastN) {
-    const data = await this.call('GetOperations', { selector, ...(lastN ? { lastN } : {}) });
+  async operations(selector, lastN, timeoutMs) {
+    const data = await this.call(
+      'GetOperations',
+      { selector, ...(lastN ? { lastN } : {}) },
+      { timeoutMs },
+    );
     if (!data || typeof data !== 'object') {
       throw new BackrestError(ERROR_KINDS.NOT_BACKREST, 'The answer is not an operation list');
     }
@@ -329,7 +341,7 @@ export class BackrestClient {
 
   /** Every operation Backrest keeps for a repository (it keeps about 30 days). */
   repoOperations(repoGuid) {
-    return this.operations({ repoGuid });
+    return this.operations({ repoGuid }, undefined, 60_000);
   }
 
   /**

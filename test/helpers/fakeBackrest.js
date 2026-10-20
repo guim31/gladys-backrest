@@ -229,6 +229,11 @@ export class FakeBackrest {
       return json(200, this.config());
     }
     if (method_ === 'GetOperations') {
+      if (payload.selector?.repoGuid && this.historyFailure === 'timeout') {
+        throw Object.assign(new Error('The operation was aborted due to timeout'), {
+          name: 'TimeoutError',
+        });
+      }
       if (payload.selector?.repoGuid && this.historyFailure) {
         return json(this.historyFailure, { code: 'unavailable', message: 'busy' });
       }

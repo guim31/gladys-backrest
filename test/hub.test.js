@@ -176,6 +176,9 @@ test('a repository history unreadable for a while fires nothing, and keeps its f
   await createDevices(world);
   world.backrest.historyFailure = 503;
   await world.hub.pollNow();
+  // A history too long to read in time does not stop the plans either.
+  world.backrest.historyFailure = 'timeout';
+  await world.hub.pollNow();
   assert.equal(world.fake.sceneEvents.length, 0);
   assert.equal(world.fake.connectionStatus.connected, true);
   assert.equal(world.hub.repos.get('local').snapshots, 3);
@@ -207,7 +210,8 @@ test('the last success stays known when failures push it out of the operations r
 });
 
 test('the snapshots forgotten by the retention policy are no longer counted', async (t) => {
-  const world = await createWorld({ timings: { startAckMs: 5, historyEveryMs: 0 } });
+  // The default timings: forget marks the operations already read, no new id.
+  const world = await createWorld();
   t.after(() => world.app.stop());
   world.backrest.forgetSnapshots('documents');
   await world.hub.pollNow();
@@ -230,7 +234,14 @@ test('the overdue threshold: period, cron (longest gap), none without schedule, 
   assert.equal(cronPeriodMs('@daily'), 24 * HOUR);
   assert.equal(cronPeriodMs('0 0 * * SUN'), 7 * 24 * HOUR);
   assert.equal(cronPeriodMs('0 4 1 * *'), 31 * 24 * HOUR);
-  assert.equal(cronPeriodMs('0 0 1 1 *'), null);
+  assert.equal(cronPeriodMs('0 0 1 1 *'), 365 * 24 * HOUR);
+  // The 31st: from August to October.
+  assert.equal(cronPeriodMs('0 3 31 * *'), 61 * 24 * HOUR);
+  // Months outside the summer, steps and ranges of weekdays.
+  assert.equal(cronPeriodMs('0 3 * 1-6 *'), 185 * 24 * HOUR);
+  assert.equal(cronPeriodMs('0 3 * * 1/2'), 3 * 24 * HOUR);
+  assert.equal(cronPeriodMs('0 3 * * MON-SUN'), 24 * HOUR);
+  assert.equal(cronPeriodMs('0 3 * * 0,7'), 7 * 24 * HOUR);
 });
 
 test('a backup made while the integration was stopped is announced after a restart, once', async (t) => {
