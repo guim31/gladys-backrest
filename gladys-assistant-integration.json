@@ -8,8 +8,8 @@
     "de": "Deine Backrest-Pläne in Gladys: ihr Zustand und ein Alarm, wenn eine Sicherung fehlschlägt.",
     "es": "Sus planes de Backrest en Gladys: su estado y una alerta si una copia falla o deja de ejecutarse."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/guim31/gladys-backrest:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/guim31/gladys-backrest:1.0.1",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-backrest/main/cover.png",
   "categories": ["services", "network"],
